@@ -3,6 +3,20 @@ import pygame
 
 from pygame.locals import K_w, K_a, K_s, K_d
 
+pygame.init()
+screen = pygame.display.set_mode((600,600))
+clock = pygame.time.Clock()
+running = True
+font = pygame.font.Font(None, 24)
+tempo_limite = 120000
+intervalo_frutas = 7000
+intervalo_serpentes = 5000
+inicio_tempo = pygame.time.get_ticks()
+contador_ticks_serpentes = 0
+contador_ticks_frutas = 0
+pontos_spawn_frutas = [(60,125), (280, 125), (340, 305), (60, 505), (380, 500)]
+pontos_spawn_serpentes = [(30,125), (270, 125), (330, 305), (50, 505), (370, 500)]
+
 class playerSprite(pygame.sprite.Sprite):
     def __init__(self):
          super().__init__()
@@ -11,7 +25,7 @@ class playerSprite(pygame.sprite.Sprite):
          self.image = macaco_img
          self.rect = macaco_img.get_rect()
          self.rect.topleft = (0,0)
-         self.velocidade = 3
+         self.velocidade = 1.7
          self.sentido = -1 #-1 e 1 são esquerda e direita
          self.vertical_speed = 0
 
@@ -31,7 +45,7 @@ class playerSprite(pygame.sprite.Sprite):
         if self.sentido == 1:
             self.image = pygame.transform.flip(self.image, True, False)
         self.rect.x += self.velocidade
-        if self.rect.x > 600:
+        if self.rect.x + 27*3 > 600:
             self.rect.x -= self.velocidade
         for bloco in blocos:
             if bloco.rect.x > self.rect.x:
@@ -44,7 +58,7 @@ class playerSprite(pygame.sprite.Sprite):
             self.vertical_speed = -10
         
 
-    def tick(self):
+    def tick(self, tempo_restante):
         if pygame.key.get_pressed()[K_w]:
             self.rect.y -= 10
         if pygame.key.get_pressed()[K_a]:
@@ -56,6 +70,7 @@ class playerSprite(pygame.sprite.Sprite):
         
         self.rect.y += self.vertical_speed
         self.vertical_speed += 0.3
+        self.detectar_colisoes(blocos, frutas, serpentes, tempo_restante)
 
     def detectar_colisoes(self, blocos, frutas, serpentes, tempo_restante):
         global qtpontos
@@ -65,14 +80,15 @@ class playerSprite(pygame.sprite.Sprite):
                 self.rect.bottom = bloco.rect.top
                 self.vertical_speed = 0 
                 print('HAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHAHA')
+       
         if pygame.sprite.spritecollide(self, serpentes, False):
             return "game_over"
-        contagem_pontos = pygame.sprite.spritecollide(player, frutas, False)
+       
+        contagem_pontos = pygame.sprite.spritecollide(player, frutas, True)
         for fruta in contagem_pontos:
-            frutas.remove(fruta)   
-            todos_sprites.remove(fruta) if fruta in todos_sprites else None
             qtpontos += 1   
             tempo_restante += 5    
+
         
 
 class blocosSprite(pygame.sprite.Sprite):
@@ -112,45 +128,7 @@ def criar_serpentes():
     serpente = serpentesSprite(x, y)
     return serpente
 
-
-
-
-   
-
-pygame.init()
-screen = pygame.display.set_mode((600,600))
-clock = pygame.time.Clock()
-running = True
-font = pygame.font.Font(None, 24)
-tempo_limite = 120000
-intervalo_frutas = 7000
-intervalo_serpentes = 5000
-inicio_tempo = pygame.time.get_ticks()
-contador_ticks_serpentes = 0
-contador_ticks_frutas = 0
-pontos_spawn_frutas = [(60,125), (280, 125), (340, 305), (60, 505), (380, 500)]
-pontos_spawn_serpentes = [(30,125), (270, 125), (330, 305), (50, 505), (370, 500)]
-
-# definir os sprites e os grupos
-player = playerSprite()
-blocos = pygame.sprite.Group()
-blocos.add(blocosSprite(40, 120))
-blocos.add(blocosSprite(360, 120))
-blocos.add(blocosSprite(220, 300))
-blocos.add(blocosSprite(40, 500))
-blocos.add(blocosSprite(360, 500))
-frutas = pygame.sprite.Group()
-serpentes = pygame.sprite.Group()
-
-todos_sprites = pygame.sprite.Group([player, blocos, serpentes, frutas])
-
-qtpontos = 0
-
-# loop principal
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
+def gameplay(contador_ticks_serpentes, contador_ticks_frutas):
     tempo_passado = pygame.time.get_ticks() - inicio_tempo
     tempo_restante = ((tempo_limite - tempo_passado) // 1000)
 
@@ -158,7 +136,7 @@ while running:
     tempo_atual_frutas = pygame.time.get_ticks()
 
     screen.fill((119, 162, 230))
-    player.tick()
+    player.tick(tempo_restante)
     
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
@@ -195,7 +173,43 @@ while running:
     screen.blit(texto_tempo, (300, 10))
     todos_sprites.draw(screen)
     serpentes.draw(screen)
+    frutas.draw(screen)
     pygame.display.flip()
+
+def menu():
+    abertura = pygame.image.load('abertura.png')
+    texto = font.render("Pressione ENTER para começar", True, (255, 255, 255))
+    texto_rect = texto.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2))
+
+modo_de_jogo = "gameplay"   
+
+
+
+# definir os sprites e os grupos
+player = playerSprite()
+blocos = pygame.sprite.Group()
+blocos.add(blocosSprite(40, 120))
+blocos.add(blocosSprite(360, 120))
+blocos.add(blocosSprite(220, 300))
+blocos.add(blocosSprite(40, 500))
+blocos.add(blocosSprite(360, 500))
+frutas = pygame.sprite.Group()
+serpentes = pygame.sprite.Group()
+
+todos_sprites = pygame.sprite.Group([player, blocos, serpentes, frutas])
+
+qtpontos = 0
+
+# loop principal
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    if modo_de_jogo == "gameplay":
+        gameplay(contador_ticks_serpentes, contador_ticks_frutas)
+    elif modo_de_jogo == 'abertura':
+        menu()
 
     clock.tick(60)
 
