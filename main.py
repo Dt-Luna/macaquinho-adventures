@@ -48,7 +48,7 @@ class playerSprite(pygame.sprite.Sprite):
             self.rect.x += 3
         
         self.rect.y += self.vertical_speed
-        self.vertical_speed += 0.1
+        self.vertical_speed += 0.3
 
     def detectar_colisoes(self, blocos, frutas, serpentes):
         global qtpontos
@@ -57,19 +57,13 @@ class playerSprite(pygame.sprite.Sprite):
             if self.rect.bottom >= bloco.rect.top:
                 self.rect.bottom = bloco.rect.top
                 self.vertical_speed = 0 
-
-        if pygame.sprite.spritecollide(player, serpentes, False):
+        if pygame.sprite.spritecollide(self, serpentes, False):
             return "game_over"
-
-
         contagem_pontos = pygame.sprite.spritecollide(player, frutas, False)
         for fruta in contagem_pontos:
             frutas.remove(fruta)   
             todos_sprites.remove(fruta) if fruta in todos_sprites else None
-            qtpontos += 1        
-        
-
-        
+            qtpontos += 1       
         
 
 class blocosSprite(pygame.sprite.Sprite):
@@ -99,17 +93,15 @@ class frutaSprite(pygame.sprite.Sprite):
         self.rect = fruta_img.get_rect()
         self.rect.topleft = (x, y)
 
-
-    
-    
-
-     
+   
 
 pygame.init()
 screen = pygame.display.set_mode((600,600))
 clock = pygame.time.Clock()
 running = True
 font = pygame.font.Font(None, 24)
+tempo_limite = 10000
+inicio_tempo = pygame.time.get_ticks()
 
 # definir os sprites e os grupos
 player = playerSprite()
@@ -119,10 +111,9 @@ for i in range(4):
 frutas = pygame.sprite.Group()
 for i in range(5):  
     frutas.add(frutaSprite(250, 50 + 120 * i))
-serpentes = serpentesSprite(50,50)
-todos_sprites = pygame.sprite.Group([player, blocos, serpentes, frutas])
 serpentes = pygame.sprite.Group()
 serpentes.add(serpentesSprite(50, 50))
+todos_sprites = pygame.sprite.Group([player, blocos, serpentes, frutas])
 
 qtpontos = 0
 
@@ -131,17 +122,27 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+    tempo_passado = pygame.time.get_ticks() - inicio_tempo
+    tempo_restante = (tempo_limite - tempo_passado) // 1000
+
     screen.fill((119, 162, 230))
     player.tick()
+    texto_tempo = font.render(f"Tempo: {tempo_restante}s", True, 'black')
+    screen.blit(texto_tempo, (500, 10))
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
         player.move_left(blocos)
     if keys[pygame.K_RIGHT]:
         player.move_right(blocos)
 
+
+    # possiveis game overs
     resultado = player.detectar_colisoes(blocos, frutas, serpentes)
     if resultado == "game_over":
         running = False
+    if tempo_restante <= 0:
+        running = False
+
 
     pontos = font.render(f"{qtpontos}", True, 'black')
     screen.blit(pontos, (10,10))
