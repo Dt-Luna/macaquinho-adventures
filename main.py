@@ -16,6 +16,7 @@ contador_ticks_serpentes = 0
 contador_ticks_frutas = 0
 pontos_spawn_frutas = [(60,125), (280, 125), (340, 305), (60, 505), (380, 500)]
 pontos_spawn_serpentes = [(30,125), (270, 125), (330, 305), (50, 505), (370, 500)]
+modo_de_jogo = 'abertura'
 
 class playerSprite(pygame.sprite.Sprite):
     def __init__(self):
@@ -177,11 +178,20 @@ def gameplay(contador_ticks_serpentes, contador_ticks_frutas):
     pygame.display.flip()
 
 def menu():
+    global modo_de_jogo
     abertura = pygame.image.load('abertura.png')
     texto = font.render("Pressione ENTER para começar", True, (255, 255, 255))
     texto_rect = texto.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2))
-
-modo_de_jogo = "gameplay"   
+    screen.blit(abertura, (0, 0))
+    screen.blit(texto, texto_rect)
+    pygame.display.flip()
+    for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()  # Fechar o jogo
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    modo_de_jogo = "gameplay"
 
 
 
