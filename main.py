@@ -14,9 +14,10 @@ intervalo_serpentes = 5000
 inicio_tempo = pygame.time.get_ticks()
 contador_ticks_serpentes = 0
 contador_ticks_frutas = 0
-serpente_largura = 40
+serpente_altura = 40
 fruta_largura = 30
 bloco_largura = 160
+pode_pular = True
 
 modo_de_jogo = 'abertura'
 
@@ -30,7 +31,7 @@ class playerSprite(pygame.sprite.Sprite):
          self.rect.topleft = (235, 286)
          self.velocidade = 1.5
          self.sentido = -1 #-1 e 1 são esquerda e direita
-         self.vertical_speed = 0
+         self.vertical_speed = 0    
 
     def move_left(self, blocos):
         if self.sentido == -1:
@@ -56,11 +57,10 @@ class playerSprite(pygame.sprite.Sprite):
         
         self.sentido = -1
 
-    def jump(self):
-        blocos_colididos = pygame.sprite.Sprite(self, self, blocos)
-        for bloco in blocos_colididos:
-            if self.vertical_speed == 0 and not pode_pular
-                self.vertical_speed = -11
+    def jump(self, pode_pular): 
+        if pode_pular:
+            self.vertical_speed = -11
+
         
 
     def tick(self, tempo_restante):
@@ -69,23 +69,35 @@ class playerSprite(pygame.sprite.Sprite):
         self.detectar_colisoes(blocos, frutas, serpentes, tempo_restante)
 
     def detectar_colisoes(self, blocos, frutas, serpentes, tempo_restante):
-        global qtpontos
+        global qtpontos, pode_pular
+        pode_pular = False
         colididos = pygame.sprite.spritecollide(self, blocos, False)
         for bloco in colididos:
-            if self.vertical_speed > 0 and self.rect.bottom >= bloco.rect.top:
-                self.rect.bottom = bloco.rect.top
-                self.vertical_speed = 0 
-            elif self.vertical_speed < 0 and self.rect.top <= bloco.rect.bottom:
-                self.rect.top = bloco.rect.bottom
-                self.vertical_speed = 0
-                pode_pular = False
+            penetra_baixo = max(self.rect.top - bloco.rect.bottom, 0)
+            penetra_cima = max(bloco.rect.top - self.rect.bottom, 0)
+            penetra_esquerda = max(bloco.rect.right - self.rect.left, 0)
+            penetra_direita = max(self.rect.right - bloco.rect.left, 0)
+                
+            # if self.rect.x < bloco.rect.x or self.rect.x > bloco.rect.x:
+            #     self.rect.bottom = bloco.rect.top
+            #     self.vertical_speed = 0 
+            #     pode_pular = True
+            # if self.vertical_speed > 0 and self.rect.bottom >= bloco.rect.top:
+            # elif self.vertical_speed < 0 and self.rect.top <= bloco.rect.bottom:
+            #     self.rect.top = bloco.rect.bottom
+            #     self.vertical_speed = 0 
+            #     # pode_pular = False
 
-        
         if self.rect.bottom >= 660:
             return "game_over"
        
-        if pygame.sprite.spritecollide(self, serpentes, False):
-            return "game_over"
+        colididas = pygame.sprite.spritecollide(self, serpentes, False)
+        for cobra in colididas:
+            if self.rect.bottom < (cobra.rect.bottom - serpente_altura//2):
+                serpentes.remove(cobra)
+                self.jump()
+            else:
+                return "game_over"
        
         contagem_pontos = pygame.sprite.spritecollide(player, frutas, True)
         for _ in contagem_pontos:
@@ -115,8 +127,7 @@ class serpentesSprite(pygame.sprite.Sprite):
         self.sentido = 1
 
     def tick(self):
-        self.rect.x += self.sentido
-        # je t'aime beaucoup
+        self.rect.x += self.sentido 
         if self.rect.topleft[0] <= self.bloco.rect.topleft[0]:
             self.image = pygame.transform.flip(self.image, True, False)
             self.sentido = 1
@@ -176,7 +187,7 @@ def gameplay():
     if keys[pygame.K_RIGHT]:
         player.move_right(blocos)
     if keys[pygame.K_UP]:
-        player.jump()
+        player.jump(blocos, pode_pular)
 
     if pontos_spawn_serpentes_disponiveis:
         if tempo_atual_serpentes - contador_ticks_serpentes >= intervalo_serpentes:
@@ -208,6 +219,7 @@ def gameplay():
     todos_sprites.draw(screen)
     serpentes.draw(screen)
     frutas.draw(screen)
+    print(player.vertical_speed)
     pygame.display.flip()
 
 def menu():
@@ -237,7 +249,7 @@ blocos.add(blocosSprite(235, 286))
 blocos.add(blocosSprite(80, 406))
 blocos.add(blocosSprite(360, 406))
 
-pontos_spawn_serpentes = [(bloco.rect.topleft[0], bloco.rect.topleft[1] - serpente_largura) for bloco in blocos]
+pontos_spawn_serpentes = [(bloco.rect.topleft[0], bloco.rect.topleft[1] - serpente_altura) for bloco in blocos]
 pontos_spawn_frutas = [(bloco.rect.topleft[0] + (bloco_largura//2 - fruta_largura//2), bloco.rect.topleft[1] - fruta_largura - 10) for bloco in blocos]
 pontos_spawn_serpentes_disponiveis = [i for i in range(len(pontos_spawn_serpentes))]
 pontos_spawn_frutas_disponiveis = [i for i in range(len(pontos_spawn_frutas))]
