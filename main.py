@@ -59,7 +59,7 @@ class playerSprite(pygame.sprite.Sprite):
 
     def jump(self, pode_pular): 
         if pode_pular:
-            self.vertical_speed = -11
+            self.vertical_speed = -8
 
         
 
@@ -73,15 +73,40 @@ class playerSprite(pygame.sprite.Sprite):
         pode_pular = False
         colididos = pygame.sprite.spritecollide(self, blocos, False)
         for bloco in colididos:
-            penetra_baixo = max(self.rect.top - bloco.rect.bottom, 0)
-            penetra_cima = max(bloco.rect.top - self.rect.bottom, 0)
+            direcao_p = [0, 0]
+            menor_p = float('inf')
+            penetra_baixo = max(bloco.rect.bottom - self.rect.top, 0)
+            if menor_p > penetra_baixo:
+                menor_p = penetra_baixo
+                direcao_p = [0, 1]
+            penetra_cima = max(self.rect.bottom - bloco.rect.top, 0)
+            if menor_p > penetra_cima:
+                menor_p = penetra_cima
+                direcao_p = [0, -1]
             penetra_esquerda = max(bloco.rect.right - self.rect.left, 0)
+            if menor_p > penetra_esquerda:
+                menor_p = penetra_esquerda
+                direcao_p = [-1, 0]
             penetra_direita = max(self.rect.right - bloco.rect.left, 0)
+            if menor_p > penetra_direita:
+                menor_p = penetra_direita
+                direcao_p = [1, 0]
+
+            if direcao_p[1] == 1 or direcao_p[1] == -1:
+                self.vertical_speed = 0
+            
+            if direcao_p[1] == -1:
+                pode_pular = True
+
+            self.rect.x -= menor_p * direcao_p[0]
+            self.rect.y += menor_p * direcao_p[1]
+
+            print(menor_p, direcao_p)
                 
             # if self.rect.x < bloco.rect.x or self.rect.x > bloco.rect.x:
             #     self.rect.bottom = bloco.rect.top
             #     self.vertical_speed = 0 
-            #     pode_pular = True
+            
             # if self.vertical_speed > 0 and self.rect.bottom >= bloco.rect.top:
             # elif self.vertical_speed < 0 and self.rect.top <= bloco.rect.bottom:
             #     self.rect.top = bloco.rect.bottom
@@ -95,7 +120,7 @@ class playerSprite(pygame.sprite.Sprite):
         for cobra in colididas:
             if self.rect.bottom < (cobra.rect.bottom - serpente_altura//2):
                 serpentes.remove(cobra)
-                self.jump()
+                self.jump(True)
             else:
                 return "game_over"
        
@@ -187,7 +212,7 @@ def gameplay():
     if keys[pygame.K_RIGHT]:
         player.move_right(blocos)
     if keys[pygame.K_UP]:
-        player.jump(blocos, pode_pular)
+        player.jump(pode_pular)
 
     if pontos_spawn_serpentes_disponiveis:
         if tempo_atual_serpentes - contador_ticks_serpentes >= intervalo_serpentes:
@@ -219,7 +244,6 @@ def gameplay():
     todos_sprites.draw(screen)
     serpentes.draw(screen)
     frutas.draw(screen)
-    print(player.vertical_speed)
     pygame.display.flip()
 
 def menu():
