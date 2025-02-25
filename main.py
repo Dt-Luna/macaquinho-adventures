@@ -31,7 +31,7 @@ class playerSprite(pygame.sprite.Sprite):
          self.rect.topleft = (235, 286)
          self.velocidade = 4
          self.sentido = -1 #-1 e 1 são esquerda e direita
-         self.vertical_speed = 0    
+         self.vertical_speed = 0 
 
     def move_left(self):
         if self.sentido == -1:
@@ -97,15 +97,17 @@ class playerSprite(pygame.sprite.Sprite):
        
         colididas = pygame.sprite.spritecollide(self, serpentes, False)
         for cobra in colididas:
-            if self.rect.bottom < (cobra.rect.bottom - serpente_altura//2):
-                self.jump(True)
-                pontos_spawn_serpentes_disponiveis.append(cobra.index)
-                serpentes.remove(cobra)
-                qt_serpentes_eliminadas += 1
-                print(qt_serpentes_eliminadas, 'a bct ')
-            else:
-                return "game_over"
-       
+            print(cobra.tempo_aviso)
+            if cobra.tempo_aviso <= 0:
+                if self.rect.bottom < (cobra.rect.bottom - serpente_altura//2):
+                    self.jump(True)
+                    pontos_spawn_serpentes_disponiveis.append(cobra.index)
+                    serpentes.remove(cobra)
+                    qt_serpentes_eliminadas += 1
+                    print(qt_serpentes_eliminadas, 'a bct ')
+                else:
+                    return "game_over"
+        
         frutas_colididas = pygame.sprite.spritecollide(player, frutas, True)
         for banana in frutas_colididas:
             qt_frutas_coletadas += 1
@@ -130,8 +132,11 @@ class serpentesSprite(pygame.sprite.Sprite):
         super().__init__()
         serpente_img = pygame.image.load('serpente.png').convert_alpha()
         serpente_img = pygame.transform.scale(serpente_img, (40,40))
-        serpente_img = pygame.transform.flip(serpente_img, True, False)
-        self.image = serpente_img
+        self.serpente_img = pygame.transform.flip(serpente_img, True, False)
+        aviso_img = pygame.image.load('aviso.png').convert_alpha()
+        aviso_img = pygame.transform.scale(aviso_img, (40, 40))
+        self.image = aviso_img
+        self.tempo_aviso = 100
         self.rect = serpente_img.get_rect()
         self.rect.topleft = (x, y)
         self.bloco = bloco
@@ -139,13 +144,19 @@ class serpentesSprite(pygame.sprite.Sprite):
         self.index = index
 
     def tick(self):
-        self.rect.x += self.sentido 
-        if self.rect.topleft[0] <= self.bloco.rect.topleft[0]:
-            self.image = pygame.transform.flip(self.image, True, False)
-            self.sentido = 1
-        elif self.rect.topright[0] >= self.bloco.rect.topright[0]:
-            self.image = pygame.transform.flip(self.image, True, False)
-            self.sentido = -1
+        if self.tempo_aviso <= 0:    
+            self.rect.x += self.sentido 
+            if self.rect.topleft[0] <= self.bloco.rect.topleft[0]:
+                self.image = pygame.transform.flip(self.image, True, False)
+                self.sentido = 1
+            elif self.rect.topright[0] >= self.bloco.rect.topright[0]:
+                self.image = pygame.transform.flip(self.image, True, False)
+                self.sentido = -1
+        else:
+            self.tempo_aviso -=1
+            if self.tempo_aviso == 0:
+                self.image = self.serpente_img
+
 
 class frutaSprite(pygame.sprite.Sprite):
     def __init__(self, x, y, index):
@@ -226,9 +237,9 @@ def gameplay():
     pontos = font.render(f"{qtpontos}", True, 'black')
     screen.blit(pontos, (10,10))
     screen.blit(texto_tempo, (300, 10))
-    todos_sprites.draw(screen)
     serpentes.draw(screen)
     frutas.draw(screen)
+    todos_sprites.draw(screen)
     pygame.display.flip()
 
 def menu():
@@ -264,7 +275,7 @@ pontos_spawn_serpentes_disponiveis = [i for i in range(len(pontos_spawn_serpente
 pontos_spawn_frutas_disponiveis = [i for i in range(len(pontos_spawn_frutas))]
 frutas = pygame.sprite.Group()
 serpentes = pygame.sprite.Group()
-todos_sprites = pygame.sprite.Group([player, blocos, serpentes, frutas])
+todos_sprites = pygame.sprite.Group([player, blocos])
 
 qt_serpentes_eliminadas = 0
 qt_frutas_coletadas = 0
