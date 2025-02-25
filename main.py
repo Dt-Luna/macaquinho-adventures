@@ -8,7 +8,8 @@ screen = pygame.display.set_mode((600, 600))
 clock = pygame.time.Clock()
 running = True
 font = pygame.font.Font(None, 24)
-tempo_limite = 600000
+wfont = pygame.font.Font(None, 48)
+tempo_limite = 6000
 intervalo_frutas = 4000
 intervalo_serpentes = 4000
 inicio_tempo = pygame.time.get_ticks()
@@ -134,7 +135,7 @@ class serpentesSprite(pygame.sprite.Sprite):
         serpente_img = pygame.transform.scale(serpente_img, (40,40))
         self.serpente_img = pygame.transform.flip(serpente_img, True, False)
         aviso_img = pygame.image.load('aviso.png').convert_alpha()
-        aviso_img = pygame.transform.scale(aviso_img, (40, 40))
+        aviso_img = pygame.transform.scale(aviso_img, (30, 30))
         self.image = aviso_img
         self.tempo_aviso = 100
         self.rect = serpente_img.get_rect()
@@ -192,7 +193,39 @@ def criar_serpentes():
     serpente = serpentesSprite(x, y, blocos.sprites()[i], i)
     return serpente
 
+def vitoria(qtpontos):
+    global tempo_limite, qt_frutas_coletadas, qt_serpentes_eliminadas, contador_ticks_frutas, contador_ticks_serpentes, modo_de_jogo
+    vitoria = pygame.image.load('vitoria')
+    win_text = wfont.render('Você ganhou!', True, 'black')
+    score_text = font.render(f'Score: {qtpontos}', True, 'black')
+    jogar_novamente = font.render('aperte ENTER para jogar novamente')
+    screen.blit(vitoria,(0, 0))
+    screen.blit(win_text, (250, 0))
+    screen.blit(jogar_novamente, (250, 200))
+    screen.blit(score_text, (20, 20))
+    pygame.display.flip()
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            exit()  # Fechar o jogo
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                tempo_limite = 6000
+                qt_frutas_coletadas = 0
+                qt_serpentes_eliminadas = 0
+                qtpontos = 0
+                contador_ticks_serpentes = 0
+                contador_ticks_frutas = 0
+                modo_de_jogo = "gameplay"
+
+    
+
+
+
+
 def gameplay():
+    global qtpontos
+    fundo = pygame.image.load('background.png')
     qtpontos = qt_frutas_coletadas * 5 + qt_serpentes_eliminadas * 10
     global contador_ticks_serpentes, contador_ticks_frutas, tempo_limite, running, serpente
     tempo_passado = pygame.time.get_ticks() - inicio_tempo
@@ -224,15 +257,16 @@ def gameplay():
             frutas.add(criar_frutas())
             contador_ticks_frutas = tempo_atual_frutas
 
-# possiveis game overs
+# vitoria e derrota
     resultado = player.detectar_colisoes(blocos, frutas, serpentes)
     if resultado == "game_over":
         print('vc perdeu a')
-        running = False
+        
     if tempo_restante <= 0:
-        running = False
+        vitoria(qtpontos)
 
     # textos e sprites
+    screen.blit(fundo, (0, 0))
     texto_tempo = font.render(f"Tempo: {tempo_restante // 60}:{tempo_restante % 60}", True, 'black')
     pontos = font.render(f"{qtpontos}", True, 'black')
     screen.blit(pontos, (10,10))
@@ -251,12 +285,12 @@ def menu():
     screen.blit(texto, texto_rect)
     pygame.display.flip()
     for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                exit()  # Fechar o jogo
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN:
-                    modo_de_jogo = "gameplay"
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            exit()  # Fechar o jogo
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                modo_de_jogo = "gameplay"
 
 
 
