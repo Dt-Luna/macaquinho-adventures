@@ -194,7 +194,7 @@ def criar_serpentes():
 
 def reiniciar():
     global tempo_limite, qt_frutas_coletadas, qt_serpentes_eliminadas, contador_ticks_frutas, contador_ticks_serpentes, modo_de_jogo, inicio_tempo, qtpontos, pontos_spawn_serpentes_disponiveis, pontos_spawn_frutas_disponiveis
-    tempo_limite = 6000
+    tempo_limite = 90000
     qt_frutas_coletadas = 0
     qt_serpentes_eliminadas = 0
     qtpontos = 0
