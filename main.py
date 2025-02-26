@@ -12,7 +12,6 @@ wfont = pygame.font.Font(None, 48)
 tempo_limite = 6000
 intervalo_frutas = 4000
 intervalo_serpentes = 4000
-inicio_tempo = pygame.time.get_ticks()
 contador_ticks_serpentes = 0
 contador_ticks_frutas = 0
 serpente_altura = 40
@@ -194,11 +193,12 @@ def criar_serpentes():
     return serpente
 
 def vitoria(qtpontos):
-    global tempo_limite, qt_frutas_coletadas, qt_serpentes_eliminadas, contador_ticks_frutas, contador_ticks_serpentes, modo_de_jogo
-    vitoria = pygame.image.load('vitoria')
+
+    global tempo_limite, qt_frutas_coletadas, qt_serpentes_eliminadas, contador_ticks_frutas, contador_ticks_serpentes, modo_de_jogo, inicio_tempo
+    vitoria = pygame.image.load('vitoria.png')
     win_text = wfont.render('Você ganhou!', True, 'black')
     score_text = font.render(f'Score: {qtpontos}', True, 'black')
-    jogar_novamente = font.render('aperte ENTER para jogar novamente')
+    jogar_novamente = font.render('aperte ENTER para jogar novamente', True, 'black')
     screen.blit(vitoria,(0, 0))
     screen.blit(win_text, (250, 0))
     screen.blit(jogar_novamente, (250, 200))
@@ -216,15 +216,11 @@ def vitoria(qtpontos):
                 qtpontos = 0
                 contador_ticks_serpentes = 0
                 contador_ticks_frutas = 0
+                inicio_tempo = pygame.time.get_ticks()
                 modo_de_jogo = "gameplay"
 
-    
-
-
-
-
 def gameplay():
-    global qtpontos
+    global qtpontos, modo_de_jogo
     fundo = pygame.image.load('background.png')
     qtpontos = qt_frutas_coletadas * 5 + qt_serpentes_eliminadas * 10
     global contador_ticks_serpentes, contador_ticks_frutas, tempo_limite, running, serpente
@@ -263,7 +259,7 @@ def gameplay():
         print('vc perdeu a')
         
     if tempo_restante <= 0:
-        vitoria(qtpontos)
+        modo_de_jogo = "vitoria"
 
     # textos e sprites
     screen.blit(fundo, (0, 0))
@@ -277,7 +273,7 @@ def gameplay():
     pygame.display.flip()
 
 def menu():
-    global modo_de_jogo
+    global modo_de_jogo, inicio_tempo
     abertura = pygame.image.load('abertura.png')
     texto = font.render("Pressione ENTER para começar", True, (255, 255, 255))
     texto_rect = texto.get_rect(center=(screen.get_width() // 2, screen.get_height() // 2))
@@ -290,6 +286,7 @@ def menu():
             exit()  # Fechar o jogo
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
+                inicio_tempo = pygame.time.get_ticks()
                 modo_de_jogo = "gameplay"
 
 
@@ -324,6 +321,8 @@ while running:
         gameplay()
     elif modo_de_jogo == 'abertura':
         menu()
+    elif modo_de_jogo == 'vitoria':
+        vitoria(qtpontos)
 
     clock.tick(60)
 
