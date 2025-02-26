@@ -9,7 +9,7 @@ clock = pygame.time.Clock()
 running = True
 font = pygame.font.Font(None, 24)
 wfont = pygame.font.Font(None, 48)
-tempo_limite = 90000
+tempo_limite = 60000
 intervalo_frutas = 4000
 intervalo_serpentes = 4000
 contador_ticks_serpentes = 0
@@ -194,7 +194,7 @@ def criar_serpentes():
 
 def reiniciar():
     global tempo_limite, qt_frutas_coletadas, qt_serpentes_eliminadas, contador_ticks_frutas, contador_ticks_serpentes, modo_de_jogo, inicio_tempo, qtpontos, pontos_spawn_serpentes_disponiveis, pontos_spawn_frutas_disponiveis
-    tempo_limite = 90000
+    tempo_limite = 60000
     qt_frutas_coletadas = 0
     qt_serpentes_eliminadas = 0
     qtpontos = 0
