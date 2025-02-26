@@ -28,7 +28,7 @@ class playerSprite(pygame.sprite.Sprite):
          macaco_img = pygame.transform.scale(macaco_img, (8*3, 12*3))
          self.image = macaco_img
          self.rect = macaco_img.get_rect()
-         self.rect.topleft = (235, 286)
+         self.rect.topleft = (300, 250)
          self.velocidade = 4
          self.sentido = -1 #-1 e 1 são esquerda e direita
          self.vertical_speed = 0 
@@ -192,16 +192,48 @@ def criar_serpentes():
     serpente = serpentesSprite(x, y, blocos.sprites()[i], i)
     return serpente
 
-def vitoria(qtpontos):
+def reiniciar():
+    global tempo_limite, qt_frutas_coletadas, qt_serpentes_eliminadas, contador_ticks_frutas, contador_ticks_serpentes, modo_de_jogo, inicio_tempo, qtpontos, pontos_spawn_serpentes_disponiveis, pontos_spawn_frutas_disponiveis
+    tempo_limite = 6000
+    qt_frutas_coletadas = 0
+    qt_serpentes_eliminadas = 0
+    qtpontos = 0
+    contador_ticks_serpentes = 0
+    contador_ticks_frutas = 0
+    inicio_tempo = pygame.time.get_ticks()
+    for cobra in serpentes:
+        serpentes.remove(cobra)
+    for fruta in frutas:
+        frutas.remove(fruta)
+    pontos_spawn_serpentes_disponiveis = [i for i in range(len(pontos_spawn_serpentes))]
+    pontos_spawn_frutas_disponiveis = [i for i in range(len(pontos_spawn_frutas))]
+    player.rect.topleft = (300, 250)
+    modo_de_jogo = "gameplay"
 
-    global tempo_limite, qt_frutas_coletadas, qt_serpentes_eliminadas, contador_ticks_frutas, contador_ticks_serpentes, modo_de_jogo, inicio_tempo
+def derrota():
+    derrota = pygame.image.load('derrota.png')
+    lose_text = wfont.render('Você perdeu', True, 'black')
+    replay_text = font.render('Aperte ENTER para jogar novamente', True, 'black')
+    screen.blit(derrota, (0, 0))
+    screen.blit(lose_text, (300 - lose_text.get_width()//2, 50))
+    screen.blit(replay_text, (300 - replay_text.get_width()//2, 150))
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            exit()  # Fechar o jogo
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                reiniciar()
+    pygame.display.flip()
+
+def vitoria(qtpontos):
     vitoria = pygame.image.load('vitoria.png')
     win_text = wfont.render('Você ganhou!', True, 'black')
     score_text = font.render(f'Score: {qtpontos}', True, 'black')
     jogar_novamente = font.render('aperte ENTER para jogar novamente', True, 'black')
     screen.blit(vitoria,(0, 0))
-    screen.blit(win_text, (250, 0))
-    screen.blit(jogar_novamente, (250, 200))
+    screen.blit(win_text, (300 - win_text.get_width()//2, 0))
+    screen.blit(jogar_novamente, (300 - jogar_novamente.get_width()//2, 150))
     screen.blit(score_text, (20, 20))
     pygame.display.flip()
     for event in pygame.event.get():
@@ -210,14 +242,7 @@ def vitoria(qtpontos):
             exit()  # Fechar o jogo
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
-                tempo_limite = 6000
-                qt_frutas_coletadas = 0
-                qt_serpentes_eliminadas = 0
-                qtpontos = 0
-                contador_ticks_serpentes = 0
-                contador_ticks_frutas = 0
-                inicio_tempo = pygame.time.get_ticks()
-                modo_de_jogo = "gameplay"
+                reiniciar()
 
 def gameplay():
     global qtpontos, modo_de_jogo
@@ -256,7 +281,7 @@ def gameplay():
 # vitoria e derrota
     resultado = player.detectar_colisoes(blocos, frutas, serpentes)
     if resultado == "game_over":
-        print('vc perdeu a')
+        modo_de_jogo = 'derrota'
         
     if tempo_restante <= 0:
         modo_de_jogo = "vitoria"
@@ -323,6 +348,8 @@ while running:
         menu()
     elif modo_de_jogo == 'vitoria':
         vitoria(qtpontos)
+    elif modo_de_jogo == 'derrota':
+        derrota()
 
     clock.tick(60)
 
