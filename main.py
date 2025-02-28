@@ -3,6 +3,7 @@ import pygame
 
 from pygame.locals import K_w, K_a, K_s, K_d
 
+
 pygame.init()
 screen = pygame.display.set_mode((600, 600))
 clock = pygame.time.Clock()
@@ -44,7 +45,6 @@ class playerSprite(pygame.sprite.Sprite):
     def move_right(self):
         if self.sentido == 1:
             self.image = pygame.transform.flip(self.image, True, False)
-            print(self.rect.x)
         if self.rect.right < 600:
             self.rect.x += self.velocidade
         self.sentido = -1
@@ -97,14 +97,12 @@ class playerSprite(pygame.sprite.Sprite):
        
         colididas = pygame.sprite.spritecollide(self, serpentes, False)
         for cobra in colididas:
-            print(cobra.tempo_aviso)
             if cobra.tempo_aviso <= 0:
                 if self.rect.bottom < (cobra.rect.bottom - serpente_altura//2):
                     self.jump(True)
                     pontos_spawn_serpentes_disponiveis.append(cobra.index)
                     serpentes.remove(cobra)
                     qt_serpentes_eliminadas += 1
-                    print(qt_serpentes_eliminadas, 'a bct ')
                 else:
                     return "game_over"
         
@@ -112,7 +110,6 @@ class playerSprite(pygame.sprite.Sprite):
         for banana in frutas_colididas:
             qt_frutas_coletadas += 1
             pontos_spawn_frutas_disponiveis.append(banana.index)
-            print(qt_frutas_coletadas)
             frutas.remove(banana)
 
 
